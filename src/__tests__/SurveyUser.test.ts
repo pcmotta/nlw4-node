@@ -2,6 +2,7 @@ import { app } from '../app'
 import request from 'supertest'
 
 import createConnection from '../database'
+import { getConnection } from 'typeorm'
 
 describe('SurveyUser', () => {
     let survey_id: string
@@ -10,6 +11,12 @@ describe('SurveyUser', () => {
     beforeAll(async () => {
         const connection = await createConnection()
         await connection.runMigrations()
+    })
+
+    afterAll(async () => {
+        const connection = await getConnection()
+        await connection.dropDatabase()
+        await connection.close()
     })
 
     it('Deve ser possível enviar um e-mail', async () => {
@@ -33,7 +40,7 @@ describe('SurveyUser', () => {
         surveyUser_id = response.body.id
 
         expect(response.status).toBe(200)
-    })
+    }, 10000)
 
     it('Não se deve criar novo registro para mesmo usuário e pesquisa', async () => {
         const response = await request(app).post('/sendEmail').send({
@@ -42,5 +49,5 @@ describe('SurveyUser', () => {
         })
 
         expect(response.body.id).toBe(surveyUser_id)
-    })
+    }, 10000)
 })
